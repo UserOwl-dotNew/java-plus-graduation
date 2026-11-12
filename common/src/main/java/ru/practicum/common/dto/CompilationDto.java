@@ -3,12 +3,14 @@ package ru.practicum.common.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Set;
 
 /**
  * DTO для передачи информации о подборке событий.
  */
+@Setter
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

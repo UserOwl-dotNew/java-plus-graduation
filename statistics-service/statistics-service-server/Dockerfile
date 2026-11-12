@@ -3,6 +3,6 @@ LABEL authors="dima"
 ENV APP_HOME=/app
 RUN mkdir $APP_HOME
 WORKDIR $APP_HOME
-COPY target/*.jar app.jar
+COPY target/statistics-service-server-*.jar app.jar
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

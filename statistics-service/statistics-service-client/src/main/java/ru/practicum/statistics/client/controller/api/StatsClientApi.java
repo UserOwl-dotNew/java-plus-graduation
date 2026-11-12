@@ -4,6 +4,7 @@ import ru.practicum.dto.EndpointHit;
 import ru.practicum.dto.ViewStats;
 
 import java.util.List;
+//todo: удалить, если все работает
 
 /**
  * API клиента для взаимодействия с сервисом статистики.

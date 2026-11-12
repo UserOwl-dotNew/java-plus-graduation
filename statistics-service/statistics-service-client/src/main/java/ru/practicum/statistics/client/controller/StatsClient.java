@@ -14,7 +14,7 @@ import ru.practicum.dto.ViewStats;
 import ru.practicum.statistics.client.controller.api.StatsClientApi;
 
 import java.util.List;
-
+//todo: удалить, если все работает
 @Slf4j
 @Component
 @RequiredArgsConstructor

@@ -5,10 +5,12 @@ import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Широта и долгота места проведения события
  */
+@Setter
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
