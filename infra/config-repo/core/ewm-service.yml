@@ -3,7 +3,7 @@ server:
 
 stats:
   server:
-    url: http://stats-service
+    url: http://statistics-service
 
 spring:
   cloud:
