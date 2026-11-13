@@ -1,4 +1,36 @@
 services:
+  eureka-server:
+    build: ./infra/discovery-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  config-server:
+    build:
+      context: ./infra
+      dockerfile: config-server/Dockerfile
+    container_name: config-server
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    volumes:
+      - ./infra/config-repo:/app/config-repo
+    environment:
+      eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
+      SPRING_APPLICATION_NAME: "config-server"
+    healthcheck:
+      test: [ "CMD", "wget", "-qO-", "http://eureka-server:8761/eureka/apps/CONFIG-SERVER" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
   stats-db:
     image: postgres:16.1
     container_name: stats-db
@@ -18,15 +50,23 @@ services:
 
   stats-server:
     build: ./statistics-service/statistics-service-server
-    container_name: stats-server
+    container_name: stats-service
     depends_on:
-      - stats-db
+      stats-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    restart: on-failure
     ports:
       - "9090:9090"
     environment:
       SPRING_DATASOURCE_URL: "jdbc:postgresql://stats-db:5432/ewm-stats"
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_APPLICATION_NAME: "stats-service"
+      eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
 
   ewm-db:
     image: postgres:16.1
@@ -45,19 +85,27 @@ services:
       retries: 5
 
   ewm-service:
-    build: ./main-service
+    build: ./core/main-service
     container_name: ewm-service
     depends_on:
       ewm-db:
         condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    restart: on-failure
     ports:
       - "8080:8080"
     environment:
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "true"
+      SPRING_CLOUD_CONFIG_DISCOVERY_SERVICE_ID: "config-server"
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: "jdbc:postgresql://ewm-db:5432/ewm"
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      STATS_SERVER_URL: "http://stats-server:9090"
+      SPRING_APPLICATION_NAME: "main-service"
+      eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
       interval: 5s

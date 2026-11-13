@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -15,6 +16,7 @@ import static ru.practicum.common.config.JacksonConfig.DATE_TIME_FORMAT;
  * DTO для записи запроса (хита) к сервису статистики.
  * Содержит информацию о сервисе, URI, IP-адресе и временной метке.
  */
+@Builder
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

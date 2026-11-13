@@ -1,0 +1,42 @@
+server:
+  port: 0
+
+stats:
+  server:
+    url: http://stats-server
+
+spring:
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            retryable: true
+          statistics-service:
+            connectTimeout: 2000
+            readTimeout: 5000
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5433/ewm
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+      properties:
+        hibernate:
+          dialect: org.hibernate.dialect.PostgreSQLDialect
+          format_sql: true
+      jdbc:
+        lob:
+          non_contextual_creation: true
+    show-sql: true
+    open-in-view: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always

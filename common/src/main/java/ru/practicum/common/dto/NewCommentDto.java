@@ -2,10 +2,7 @@ package ru.practicum.common.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
  * DTO для создания нового комментария.
@@ -21,8 +18,8 @@ import lombok.NoArgsConstructor;
  *
  * @see CommentDto
  * @see UpdateCommentDto
- * @see ru.practicum.mainservice.controller.PrivateCommentController
  */
+@Setter
 @Data
 @Builder
 @NoArgsConstructor

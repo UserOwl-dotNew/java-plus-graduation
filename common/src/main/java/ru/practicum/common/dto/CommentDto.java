@@ -1,9 +1,6 @@
 package ru.practicum.common.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -22,8 +19,8 @@ import java.time.LocalDateTime;
  *
  * @see NewCommentDto
  * @see UpdateCommentDto
- * @see ru.practicum.mainservice.comments.service.CommentService
  */
+@Setter
 @Data
 @Builder
 @NoArgsConstructor
