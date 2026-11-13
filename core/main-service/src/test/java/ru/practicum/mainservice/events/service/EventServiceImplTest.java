@@ -667,7 +667,7 @@ public class EventServiceImplTest {
 
         when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
         when(eventMapper.toFullDto(event)).thenReturn(eventFullDto);
-        when(statsClient.getStats(anyString(), anyString(), anyString(), eq(true)))
+        when(statsClient.getStats(anyString(), anyString(), anyList(), eq(true)))
                 .thenReturn(List.of());
 
         EventFullDto result = eventService.getPublicEvent(eventId);

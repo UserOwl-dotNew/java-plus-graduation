@@ -422,7 +422,7 @@ public class EventServiceImpl implements EventService {
             List<ViewStats> stats = statsClient.getStats(
                     start.format(FORMATTER),
                     LocalDateTime.now().format(FORMATTER),
-                    "/events/" + event.getId(),
+                    List.of("/events/", event.getId().toString()),
                     true
             );
 
