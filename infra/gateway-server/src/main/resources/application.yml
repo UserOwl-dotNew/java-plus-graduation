@@ -17,8 +17,8 @@ spring:
             locator:
               enabled: true
           routes:
-            - id: ewm-service
-              uri: lb://ewm-service
+            - id: main-service
+              uri: lb://main-service
               predicates:
                 - Path=/admin/**,/users/**,/categories/**,/compilations/**,/events/**,/comments/**
 eureka:
