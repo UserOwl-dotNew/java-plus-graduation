@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ewm-service
+    name: main-service
   config:
     fail-fast: true
     import: "optional:configserver:"
