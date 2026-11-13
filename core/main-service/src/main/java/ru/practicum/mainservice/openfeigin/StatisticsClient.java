@@ -24,7 +24,7 @@ public interface StatisticsClient {
     List<ViewStats> getStats(
             @RequestParam("start") String start,
             @RequestParam("end") String end,
-            @RequestParam(value = "uris", required = false) List<String> uris, //todo: если не работает поменять на строку (String.join(",", uris))
+            @RequestParam(value = "uris", required = false) String uris,
             @RequestParam("unique") Boolean unique
     );
 }
