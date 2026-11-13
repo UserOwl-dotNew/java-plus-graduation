@@ -12,7 +12,7 @@ import ru.practicum.mainservice.config.StatisticsFeignConfig;
 import java.util.List;
 
 @FeignClient(
-        name = "stats-service",
+        name = "stats-server",
         configuration = StatisticsFeignConfig.class
 )
 public interface StatisticsClient {
