@@ -50,7 +50,7 @@ services:
 
   stats-server:
     build: ./statistics-service/statistics-service-server
-    container_name: statistics-service
+    container_name: stats-service
     depends_on:
       stats-db:
         condition: service_healthy
