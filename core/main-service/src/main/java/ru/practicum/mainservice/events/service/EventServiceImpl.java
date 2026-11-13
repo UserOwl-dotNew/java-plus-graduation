@@ -350,7 +350,7 @@ public class EventServiceImpl implements EventService {
 
         EndpointHit hit = EndpointHit.builder()
                 .app(APP_NAME)
-                .uri("/events" + eventId)
+                .uri("/events/" + eventId)
                 .ip("0.0.0.0")
                 .timestamp(LocalDateTime.now())
                 .build();
@@ -422,7 +422,7 @@ public class EventServiceImpl implements EventService {
             List<ViewStats> stats = statsClient.getStats(
                     start.format(FORMATTER),
                     LocalDateTime.now().format(FORMATTER),
-                    List.of("/events/", event.getId().toString()),
+                    "/events/" + event.getId(),
                     true
             );
 
