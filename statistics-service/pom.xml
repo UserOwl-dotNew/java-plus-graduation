@@ -14,6 +14,7 @@
 
     <modules>
         <module>statistics-service-dto</module>
+        <module>statistics-service-client</module>
         <module>statistics-service-server</module>
     </modules>
 
@@ -22,5 +23,18 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    <dependencies>
+        <dependency>
+            <groupId>ru.practicum</groupId>
+            <artifactId>statistics-service-dto</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
 </project>
