@@ -37,8 +37,7 @@ import ru.practicum.mainservice.users.service.UserService;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static ru.practicum.common.config.JacksonConfig.DATE_TIME_FORMAT;
@@ -314,7 +313,8 @@ public class EventServiceImpl implements EventService {
         }
 
         if (sort != null && sort.equalsIgnoreCase(SortType.VIEWS.name())) {
-            events.sort(Comparator.comparingLong(this::getViewsCount));
+            Map<Long, Long> viewsMap = getViewsCountForEvents(events);
+            events.sort(Comparator.comparingLong(e -> viewsMap.getOrDefault(e.getId(), 0L)));
         }
 
         List<EventShortDto> dtos = events.stream()
@@ -431,6 +431,57 @@ public class EventServiceImpl implements EventService {
             log.warn("Failed to get views for event {}", event.getId(), e);
             return 0;
         }
+    }
+
+    private Map<Long, Long> getViewsCountForEvents(List<Event> events) {
+        if (events == null || events.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Event> validEvents = events.stream()
+                .filter(e -> e != null && e.getId() != null)
+                .toList();
+
+        if (validEvents.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        String uris = validEvents.stream()
+                .map(e -> "/events/" + e.getId())
+                .collect(Collectors.joining(","));
+
+        LocalDateTime start = validEvents.stream()
+                .map(e -> e.getPublishedOn() != null ? e.getPublishedOn() : e.getCreatedOn())
+                .filter(Objects::nonNull)
+                .min(LocalDateTime::compareTo)
+                .orElse(LocalDateTime.now().minusDays(1));
+
+        List<ViewStats> stats;
+        try {
+            stats = statsClient.getStats(
+                    start.format(FORMATTER),
+                    LocalDateTime.now().format(FORMATTER),
+                    uris,
+                    true
+            );
+        } catch (Exception e) {
+            log.warn("Failed to get views for events", e);
+            return Collections.emptyMap();
+        }
+
+        Map<Long, Long> result = new HashMap<>();
+        for (ViewStats stat : stats) {
+            String uri = stat.getUri();
+            if (uri != null && uri.startsWith("/events/")) {
+                try {
+                    Long eventId = Long.parseLong(uri.substring("/events/".length()));
+                    result.put(eventId, stat.getHits());
+                } catch (NumberFormatException ignored) {
+                    // пропускаем невалидные uri
+                }
+            }
+        }
+        return result;
     }
 
     private User getUserEntity(Long userId) {

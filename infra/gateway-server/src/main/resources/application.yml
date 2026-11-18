@@ -8,3 +8,12 @@ spring:
       discovery:
         enabled: true
         service-id: config-server
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: gateway
+  endpoint:
+    gateway:
+      access: read-only
