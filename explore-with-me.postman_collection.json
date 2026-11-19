@@ -1,0 +1,410 @@
+{
+  "info": {
+    "name": "\"Explore With Me\" API — Scenario",
+    "description": "Полный сценарий тестирования: создание пользователя, категории, события, публикация, запрос на участие, подтверждение, подборка, публичные проверки.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "userId", "value": "" },
+    { "key": "userId2", "value": "" },
+    { "key": "catId", "value": "" },
+    { "key": "eventId", "value": "" },
+    { "key": "requestId", "value": "" },
+    { "key": "compId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Scenario (full flow)",
+      "item": [
+        {
+          "name": "1. Создать пользователя-инициатора",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('userId', json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"initiator@practicummail.ru\",\n  \"name\": \"Инициатор Событий\"\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/users", "host": ["{{baseUrl}}"], "path": ["admin", "users"] }
+          }
+        },
+        {
+          "name": "3. Создать событие от имени инициатора",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('eventId', json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"annotation\": \"Сплав на байдарках похож на полет и дарит яркие впечатления.\",\n  \"category\": {{catId}},\n  \"description\": \"Сплав на байдарках похож на полет. На спокойной воде — это парение. На бурной, порожистой — выполнение фигур высшего пилотажа.\",\n  \"eventDate\": \"2027-12-31 15:10:05\",\n  \"location\": { \"lat\": 55.754167, \"lon\": 37.62 },\n  \"paid\": true,\n  \"participantLimit\": 10,\n  \"requestModeration\": true,\n  \"title\": \"Сплав на байдарках\"\n}" },
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}/events", "host": ["{{baseUrl}}"], "path": ["users", "{{userId}}", "events"] }
+          }
+        },
+        {
+          "name": "4. Опубликовать событие (админ)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"stateAction\": \"PUBLISH_EVENT\"\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/events/{{eventId}}", "host": ["{{baseUrl}}"], "path": ["admin", "events", "{{eventId}}"] }
+          }
+        },
+        {
+          "name": "5. Создать второго пользователя (участника)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('userId2', json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"participant@practicummail.ru\",\n  \"name\": \"Участник Событий\"\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/users", "host": ["{{baseUrl}}"], "path": ["admin", "users"] }
+          }
+        },
+        {
+          "name": "6. Создать запрос на участие (участник)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('requestId', json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId2}}/requests?eventId={{eventId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId2}}", "requests"],
+              "query": [{ "key": "eventId", "value": "{{eventId}}" }]
+            }
+          }
+        },
+        {
+          "name": "7. Подтвердить запрос (инициатор)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"requestIds\": [{{requestId}}],\n  \"status\": \"CONFIRMED\"\n}" },
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}/events/{{eventId}}/requests", "host": ["{{baseUrl}}"], "path": ["users", "{{userId}}", "events", "{{eventId}}", "requests"] }
+          }
+        },
+        {
+          "name": "8. Создать подборку (админ)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('compId', json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"events\": [{{eventId}}],\n  \"pinned\": false,\n  \"title\": \"Летние концерты\"\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/compilations", "host": ["{{baseUrl}}"], "path": ["admin", "compilations"] }
+          }
+        },
+        {
+          "name": "9.1. GET /categories",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"] } }],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/categories?from=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"],
+              "query": [
+                { "key": "from", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "9.2. GET /categories/{catId}",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"] } }],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/categories/{{catId}}", "host": ["{{baseUrl}}"], "path": ["categories", "{{catId}}"] }
+          }
+        },
+        {
+          "name": "9.3. GET /events",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"] } }],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/events?from=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"],
+              "query": [
+                { "key": "from", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "9.4. GET /events/{eventId}",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"] } }],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/events/{{eventId}}", "host": ["{{baseUrl}}"], "path": ["events", "{{eventId}}"] }
+          }
+        },
+        {
+          "name": "9.5. GET /compilations",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"] } }],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/compilations?from=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["compilations"],
+              "query": [
+                { "key": "from", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "9.6. GET /compilations/{compId}",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"] } }],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/compilations/{{compId}}", "host": ["{{baseUrl}}"], "path": ["compilations", "{{compId}}"] }
+          }
+        },
+        {
+          "name": "9.7. GET /users/{userId}/events",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"] } }],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/events?from=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}", "events"],
+              "query": [
+                { "key": "from", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "9.8. GET /users/{userId}/events/{eventId}",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"] } }],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}/events/{{eventId}}", "host": ["{{baseUrl}}"], "path": ["users", "{{userId}}", "events", "{{eventId}}"] }
+          }
+        },
+        {
+          "name": "9.9. GET /users/{userId}/events/{eventId}/requests",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"] } }],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}/events/{{eventId}}/requests", "host": ["{{baseUrl}}"], "path": ["users", "{{userId}}", "events", "{{eventId}}", "requests"] }
+          }
+        },
+        {
+          "name": "9.10. GET /users/{userId2}/requests",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"] } }],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users/{{userId2}}/requests", "host": ["{{baseUrl}}"], "path": ["users", "{{userId2}}", "requests"] }
+          }
+        },
+        {
+          "name": "10.1. DELETE /admin/compilations/{compId}",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status 204', () => pm.response.to.have.status(204));"] } }],
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/admin/compilations/{{compId}}", "host": ["{{baseUrl}}"], "path": ["admin", "compilations", "{{compId}}"] }
+          }
+        },
+        {
+          "name": "10.2. DELETE /admin/users/{userId2}",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status 204', () => pm.response.to.have.status(204));"] } }],
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/admin/users/{{userId2}}", "host": ["{{baseUrl}}"], "path": ["admin", "users", "{{userId2}}"] }
+          }
+        },
+        {
+          "name": "10.3. DELETE /admin/users/{userId}",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('status 204', () => pm.response.to.have.status(204));"] } }],
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/admin/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["admin", "users", "{{userId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin: Категории (spravochnik)",
+      "item": [
+        {
+          "name": "Добавление новой категории",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Спорт\"\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/categories", "host": ["{{baseUrl}}"], "path": ["admin", "categories"] }
+          }
+        },
+        {
+          "name": "Изменение категории",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Спорт и отдых\"\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/categories/{{catId}}", "host": ["{{baseUrl}}"], "path": ["admin", "categories", "{{catId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin: События (spravochnik)",
+      "item": [
+        {
+          "name": "Поиск событий",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/events?from=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "events"],
+              "query": [
+                { "key": "from", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Редактирование данных события и его статуса",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"stateAction\": \"PUBLISH_EVENT\"\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/events/{{eventId}}", "host": ["{{baseUrl}}"], "path": ["admin", "events", "{{eventId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin: Пользователи (spravochnik)",
+      "item": [
+        {
+          "name": "Получение информации о пользователях",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/users?from=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users"],
+              "query": [
+                { "key": "from", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Private: События (spravochnik)",
+      "item": [
+        {
+          "name": "Изменение события текущего пользователя",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Новый заголовок\",\n  \"stateAction\": \"SEND_TO_REVIEW\"\n}" },
+            "url": { "raw": "{{baseUrl}}/users/{{userId}}/events/{{eventId}}", "host": ["{{baseUrl}}"], "path": ["users", "{{userId}}", "events", "{{eventId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Private: Запросы на участие (spravochnik)",
+      "item": [
+        {
+          "name": "Отмена своего запроса на участие в событии",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/users/{{userId2}}/requests/{{requestId}}/cancel", "host": ["{{baseUrl}}"], "path": ["users", "{{userId2}}", "requests", "{{requestId}}", "cancel"] }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,14 +1,12 @@
 package ru.practicum.common.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
  * DTO для краткой информации о пользователе.
  * Используется в ответах API для отображения основных данных без email.
  */
+@Setter
 @Data
 @Builder
 @AllArgsConstructor

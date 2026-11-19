@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import ru.practicum.common.config.JacksonConfig;
 
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
  * DTO для краткой информации о событии.
  * Используется в публичных запросах для отображения списка событий.
  */
+@Setter
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
