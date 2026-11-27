@@ -4,7 +4,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "management-participation", contextId = "participationRequestFeignClient")
+@FeignClient(name = "request-service", contextId = "participationRequestFeignClient")
 public interface ParticipationRequestFeignClient {
 
     @GetMapping("/internal/requests/event/{eventId}/confirmed-count")

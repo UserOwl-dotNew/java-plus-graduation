@@ -7,8 +7,8 @@ spring:
       server:
         webflux:
           routes:
-            - id: management-participation
-              uri: lb://management-participation
+            - id: request-service
+              uri: lb://request-service
               predicates:
                 - Path=/users/{userId}/requests/**,/users/{userId}/events/{eventId}/requests
             - id: comments-service

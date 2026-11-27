@@ -13,7 +13,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>event-service</module>
-        <module>management-participation</module>
+        <module>request-service</module>
         <module>user-service</module>
         <module>comments-service</module>
     </modules>
