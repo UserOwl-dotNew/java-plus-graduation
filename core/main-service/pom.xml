@@ -14,8 +14,8 @@
     <modules>
         <module>event-management</module>
         <module>management-participation</module>
-        <module>user-administration</module>
-        <module>comments-events</module>
+        <module>user-service</module>
+        <module>comments-service</module>
     </modules>
 
     <properties>

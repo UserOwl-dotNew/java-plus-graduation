@@ -153,9 +153,9 @@ services:
       eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
       eureka.instance.prefer-ip-address: "true"
 
-  user-administration:
-    build: ./core/main-service/user-administration
-    container_name: user-administration
+  user-service:
+    build: ./core/main-service/user-service
+    container_name: user-service
     depends_on:
       ewm-db:
         condition: service_healthy
@@ -173,12 +173,12 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_APPLICATION_NAME: "user-administration"
+      SPRING_APPLICATION_NAME: "user-service"
       eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
       eureka.instance.prefer-ip-address: "true"
 
   comments-service:
-    build: ./core/main-service/comments-events
+    build: ./core/main-service/comments-service
     container_name: comments-service
     depends_on:
       ewm-db:

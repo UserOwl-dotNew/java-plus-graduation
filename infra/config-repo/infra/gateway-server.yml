@@ -19,8 +19,8 @@ spring:
               uri: lb://event-management
               predicates:
                 - Path=/admin/categories/**,/categories/**,/admin/compilations/**,/compilations/**,/admin/events/**,/events/**,/users/**
-            - id: user-administration
-              uri: lb://user-administration
+            - id: user-service
+              uri: lb://user-service
               predicates:
                 - Path=/admin/users/**
           discovery:
