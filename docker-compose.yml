@@ -105,9 +105,9 @@ services:
       timeout: 5s
       retries: 5
 
-  event-management:
-    build: ./core/main-service/event-management
-    container_name: event-management
+  event-service:
+    build: ./core/main-service/event-service
+    container_name: event-service
     depends_on:
       ewm-db:
         condition: service_healthy
@@ -125,7 +125,7 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_APPLICATION_NAME: "event-management"
+      SPRING_APPLICATION_NAME: "event-service"
       eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
       eureka.instance.prefer-ip-address: "true"
 

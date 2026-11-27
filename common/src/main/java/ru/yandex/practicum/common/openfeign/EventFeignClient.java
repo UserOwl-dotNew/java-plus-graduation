@@ -8,7 +8,7 @@ import ru.yandex.practicum.common.entity.Event;
 
 import java.util.List;
 
-@FeignClient(name = "event-management", contextId = "eventFeignClient")
+@FeignClient(name = "event-service", contextId = "eventFeignClient")
 public interface EventFeignClient {
 
     @GetMapping("/internal/events/{id}")

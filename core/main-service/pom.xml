@@ -12,7 +12,7 @@
     <artifactId>main-service</artifactId>
     <packaging>pom</packaging>
     <modules>
-        <module>event-management</module>
+        <module>event-service</module>
         <module>management-participation</module>
         <module>user-service</module>
         <module>comments-service</module>
