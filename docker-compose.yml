@@ -23,8 +23,8 @@ services:
       - ./infra/config-repo:/app/config-repo
     environment:
       eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
-      SPRING_APPLICATION_NAME: "config-server"
       eureka.instance.prefer-ip-address: "true"
+      SPRING_APPLICATION_NAME: "config-server"
       SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS: "file:/app/config-repo,file:/app/config-repo/core,file:/app/config-repo/statistics-service,file:/app/config-repo/infra"
     healthcheck:
       test: [ "CMD", "wget", "-qO-", "http://eureka-server:8761/eureka/apps/CONFIG-SERVER" ]
@@ -83,9 +83,11 @@ services:
       SPRING_DATASOURCE_URL: "jdbc:postgresql://stats-db:5432/ewm-stats"
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_APPLICATION_NAME: "stats-service"
+      SPRING_APPLICATION_NAME: "stats-server"
+      SPRING_CLOUD_CONFIG_NAME: "stats-service"
       eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
       eureka.instance.prefer-ip-address: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
 
   ewm-db:
     image: postgres:16.1
@@ -103,9 +105,9 @@ services:
       timeout: 5s
       retries: 5
 
-  ewm-service:
-    build: ./core/main-service
-    container_name: ewm-service
+  event-management:
+    build: ./core/main-service/event-management
+    container_name: event-management
     depends_on:
       ewm-db:
         condition: service_healthy
@@ -115,21 +117,89 @@ services:
         condition: service_healthy
     restart: on-failure
     environment:
+      SPRING_CONFIG_IMPORT: "configserver:"
       SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "true"
       SPRING_CLOUD_CONFIG_DISCOVERY_SERVICE_ID: "config-server"
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: "jdbc:postgresql://ewm-db:5432/ewm"
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_APPLICATION_NAME: "main-service"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_APPLICATION_NAME: "event-management"
       eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
       eureka.instance.prefer-ip-address: "true"
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-      start_period: 60s
+
+  management-participation:
+    build: ./core/main-service/management-participation
+    container_name: management-participation
+    depends_on:
+      ewm-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    restart: on-failure
+    environment:
+      SPRING_CONFIG_IMPORT: "configserver:"
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "true"
+      SPRING_CLOUD_CONFIG_DISCOVERY_SERVICE_ID: "config-server"
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://ewm-db:5432/ewm"
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_APPLICATION_NAME: "management-participation"
+      eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
+      eureka.instance.prefer-ip-address: "true"
+
+  user-administration:
+    build: ./core/main-service/user-administration
+    container_name: user-administration
+    depends_on:
+      ewm-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    restart: on-failure
+    environment:
+      SPRING_CONFIG_IMPORT: "configserver:"
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "true"
+      SPRING_CLOUD_CONFIG_DISCOVERY_SERVICE_ID: "config-server"
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://ewm-db:5432/ewm"
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_APPLICATION_NAME: "user-administration"
+      eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
+      eureka.instance.prefer-ip-address: "true"
+
+  comments-service:
+    build: ./core/main-service/comments-events
+    container_name: comments-service
+    depends_on:
+      ewm-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    restart: on-failure
+    environment:
+      SPRING_CONFIG_IMPORT: "configserver:"
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "true"
+      SPRING_CLOUD_CONFIG_DISCOVERY_SERVICE_ID: "config-server"
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://ewm-db:5432/ewm"
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_APPLICATION_NAME: "comments-service"
+      eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
+      eureka.instance.prefer-ip-address: "true"
 
 volumes:
   stats-db-data:

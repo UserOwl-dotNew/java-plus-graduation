@@ -7,10 +7,22 @@ spring:
       server:
         webflux:
           routes:
-            - id: main-service
-              uri: lb://main-service
+            - id: management-participation
+              uri: lb://management-participation
               predicates:
-                - Path=/admin/**,/users/**,/categories/**,/compilations/**,/events/**,/comments/**
+                - Path=/users/{userId}/requests/**,/users/{userId}/events/{eventId}/requests
+            - id: comments-service
+              uri: lb://comments-service
+              predicates:
+                - Path=/admin/comments/**,/users/{userId}/comments/**,/events/{eventId}/comments/**
+            - id: event-management
+              uri: lb://event-management
+              predicates:
+                - Path=/admin/categories/**,/categories/**,/admin/compilations/**,/compilations/**,/admin/events/**,/events/**,/users/**
+            - id: user-administration
+              uri: lb://user-administration
+              predicates:
+                - Path=/admin/users/**
           discovery:
             locator:
               enabled: true
