@@ -1,5 +1,6 @@
 package ru.yandex.practicum.event.management.events.service;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -314,9 +315,13 @@ public class EventServiceImpl implements EventService {
                     .collect(Collectors.toList());
         }
 
+        Map<Long, Long> viewsMap = getViewsCountForEvents(events);
+
         if (sort != null && sort.equalsIgnoreCase(SortType.VIEWS.name())) {
-            Map<Long, Long> viewsMap = getViewsCountForEvents(events);
-            events.sort(Comparator.comparingLong(e -> viewsMap.getOrDefault(e.getId(), 0L)));
+            events = events.stream()
+                    .sorted(Comparator.comparingLong(
+                            event -> viewsMap.getOrDefault(event.getId(), 0L)))
+                    .toList();
         }
 
         List<EventShortDto> dtos = events.stream()
@@ -326,7 +331,8 @@ public class EventServiceImpl implements EventService {
         List<Event> finalEvents = events;
         dtos.forEach(dto -> {
             Event event = finalEvents.get(dtos.indexOf(dto));
-            enrichShortDtoWithViewsAndRequests(dto, event);
+            dto.setConfirmedRequests(getConfirmedRequestsCount(event));
+            dto.setViews(viewsMap.getOrDefault(event.getId(), 0L));
         });
 
         EndpointHit hit = EndpointHit.builder()
@@ -412,12 +418,14 @@ public class EventServiceImpl implements EventService {
         EventFullDto dto = mapper.toFullDto(event);
         dto.setConfirmedRequests(getConfirmedRequestsCount(event));
         dto.setViews(getViewsCount(event));
-        return dto;
-    }
 
-    private void enrichShortDtoWithViewsAndRequests(EventShortDto dto, Event event) {
-        dto.setConfirmedRequests(getConfirmedRequestsCount(event));
-        dto.setViews(getViewsCount(event));
+        UserDto user = getUserDtoOrThrow(event.getInitiatorId());
+        dto.setInitiator(UserShortDto.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .build()
+        );
+        return dto;
     }
 
     private long getConfirmedRequestsCount(Event event) {
@@ -509,7 +517,7 @@ public class EventServiceImpl implements EventService {
     }
 
     private User getUserEntity(Long userId) {
-        UserDto user = userClient.getEntity(userId);
+        UserDto user = getUserDtoOrThrow(userId);
         return new User(user.getId(), user.getEmail(), user.getName());
     }
 
@@ -524,5 +532,13 @@ public class EventServiceImpl implements EventService {
             return true;
         }
         return getConfirmedRequestsCount(event) < event.getParticipantLimit();
+    }
+
+    private UserDto getUserDtoOrThrow(Long userId) {
+        try {
+            return userClient.getEntity(userId);
+        } catch (FeignException.NotFound e) {
+            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
+        }
     }
 }

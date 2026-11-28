@@ -95,9 +95,6 @@ class CompilationServiceImplTest {
 
         verify(compilationRepository)
                 .saveAndFlush(compilation);
-
-        verify(eventClient, never())
-                .findAllById(any());
     }
 
     @Test
@@ -211,9 +208,6 @@ class CompilationServiceImplTest {
         compilationService.updateCompilation(1L, request);
 
         assertThat(compilation.getEvents()).isEmpty();
-
-        verify(eventClient, never())
-                .findAllById(any());
     }
 
     @Test

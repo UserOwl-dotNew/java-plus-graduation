@@ -1,5 +1,6 @@
 package ru.yandex.practicum.comments.service;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -10,11 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.comments.entity.Comment;
 import ru.yandex.practicum.comments.mapper.CommentMapper;
 import ru.yandex.practicum.comments.repository.CommentRepository;
-import ru.yandex.practicum.common.dto.CommentDto;
-import ru.yandex.practicum.common.dto.NewCommentDto;
-import ru.yandex.practicum.common.dto.UpdateCommentDto;
-import ru.yandex.practicum.common.dto.UserDto;
+import ru.yandex.practicum.common.dto.*;
+import ru.yandex.practicum.common.entity.Category;
 import ru.yandex.practicum.common.entity.Event;
+import ru.yandex.practicum.common.entity.Location;
 import ru.yandex.practicum.common.enums.EventState;
 import ru.yandex.practicum.common.enums.SortType;
 import ru.yandex.practicum.common.exception.ConflictException;
@@ -40,13 +40,13 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public CommentDto createComment(Long userId, Long eventId, NewCommentDto dto) {
-        UserDto author = userClient.getEntity(userId);
+        UserDto author = getUserDtoOrThrow(userId);
 
         if (author == null) {
             throw new NotFoundException("Пользователь с id= " + userId + " не найден");
         }
 
-        Event event = eventClient.findById(eventId);
+        Event event = getEventOrThrow(eventId);
         if (event == null) {
             throw new NotFoundException(
                     "Событие с id=" + eventId + " не найдено"
@@ -130,7 +130,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentDto> getEventComments(Long eventId, int from, int size, String sort) {
-        Event event = eventClient.findById(eventId);
+        Event event = getEventOrThrow(eventId);
         if (event == null) {
             throw new NotFoundException(
                     "Событие с id=" + eventId + " не найдено"
@@ -229,5 +229,46 @@ public class CommentServiceImpl implements CommentService {
                 .findAllByEventId(eventId, pageable)
                 .map(commentMapper::toDto)
                 .getContent();
+    }
+
+    private Event toEventEntity(EventFullDto dto) {
+        return Event.builder()
+                .id(dto.getId())
+                .annotation(dto.getAnnotation())
+                .description(dto.getDescription())
+                .title(dto.getTitle())
+                .category(new Category(
+                        dto.getCategory().getId(),
+                        dto.getCategory().getName()
+                ))
+                .initiatorId(dto.getInitiator().getId())
+                .location(new Location(
+                        dto.getLocation().getLat(),
+                        dto.getLocation().getLon()
+                ))
+                .eventDate(dto.getEventDate())
+                .createdOn(dto.getCreatedOn())
+                .publishedOn(dto.getPublishedOn())
+                .paid(dto.getPaid())
+                .participantLimit(dto.getParticipantLimit())
+                .requestModeration(dto.getRequestModeration())
+                .state(dto.getState())
+                .build();
+    }
+
+    private Event getEventOrThrow(Long eventId) {
+        try {
+            return toEventEntity(eventClient.getEvent(eventId));
+        } catch (FeignException.NotFound e) {
+            throw new NotFoundException("Событие с id=" + eventId + " не найдено");
+        }
+    }
+
+    private UserDto getUserDtoOrThrow(Long userId) {
+        try {
+            return userClient.getEntity(userId);
+        } catch (FeignException.NotFound e) {
+            throw new NotFoundException("Пользователь с id=" + userId + " не найден");
+        }
     }
 }
