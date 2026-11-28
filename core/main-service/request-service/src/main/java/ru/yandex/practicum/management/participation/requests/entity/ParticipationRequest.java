@@ -6,8 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import ru.yandex.practicum.common.entity.Event;
-import ru.yandex.practicum.common.entity.User;
 import ru.yandex.practicum.common.enums.RequestStatus;
 
 import java.time.LocalDateTime;
@@ -34,19 +32,17 @@ public class ParticipationRequest {
      * Событие, на которое подается запрос.
      * Связь многие-к-одному с таблицей events.
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id", nullable = false)
+    @Column(name = "event_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private Event event;
+    private Long eventId;
 
     /**
      * Пользователь, подавший запрос на участие.
      * Связь многие-к-одному с таблицей users.
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "requester_id", nullable = false)
+    @Column(name = "requester_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private User requester;
+    private Long requestId;
 
     /**
      * Текущий статус запроса.

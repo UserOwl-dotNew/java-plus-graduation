@@ -167,10 +167,10 @@ public class CommentServiceImpl implements CommentService {
                         "Комментарий с id=" + commentId + " не найден"
                 ));
 
-        if (comment.getEvent().getState() != EventState.PUBLISHED) {
+        if (eventClient.getEvent(comment.getEventId()).getState() != EventState.PUBLISHED) {
             throw new NotFoundException(
                     "Опубликованное событие с id="
-                            + comment.getEvent().getId()
+                            + comment.getEventId()
                             + " не найдено"
             );
         }

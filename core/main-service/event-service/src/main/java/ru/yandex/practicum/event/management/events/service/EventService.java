@@ -149,4 +149,6 @@ public interface EventService {
     List<Event> getEventsByIds(List<Long> ids);
 
     boolean existsByInitiatorId(Long id);
+
+    EventFullDto getEventFullDto(Long eventId);
 }

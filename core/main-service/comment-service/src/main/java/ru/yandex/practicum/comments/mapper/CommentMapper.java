@@ -29,7 +29,7 @@ public interface CommentMapper {
      * @param comment сущность комментария
      * @return DTO с информацией о комментарии
      */
-    @Mapping(target = "eventId", source = "event.id")
+    @Mapping(target = "eventId", source = "eventId")
     @Mapping(target = "isDeleted", source = "deleted")
     CommentDto toDto(Comment comment);
 
@@ -74,7 +74,7 @@ public interface CommentMapper {
                     NullValuePropertyMappingStrategy.IGNORE
     )
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "event", ignore = true)
+    @Mapping(target = "eventId", ignore = true)
     @Mapping(target = "authorId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)

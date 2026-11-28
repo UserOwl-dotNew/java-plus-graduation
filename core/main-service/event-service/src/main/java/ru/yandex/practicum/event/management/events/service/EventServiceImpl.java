@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.common.dto.EventFullDto;
 import ru.yandex.practicum.common.dto.EventShortDto;
 import ru.yandex.practicum.common.dto.UserDto;
+import ru.yandex.practicum.common.dto.UserShortDto;
 import ru.yandex.practicum.common.entity.Category;
 import ru.yandex.practicum.common.entity.Event;
 import ru.yandex.practicum.common.entity.User;
@@ -195,7 +196,7 @@ public class EventServiceImpl implements EventService {
             throw new BadRequestException("Event date must be at least 2 hours from now");
         }
 
-        Event event = mapper.toEntity(dto, category, user);
+        Event event = mapper.toEntity(dto, category, user.getId());
         event.setState(EventState.PENDING);
         event.setCreatedOn(LocalDateTime.now());
         event.setPaid(dto.getPaid() != null ? dto.getPaid() : false);
@@ -220,7 +221,7 @@ public class EventServiceImpl implements EventService {
             throw new BadRequestException("Participant limit not be negative");
         }
 
-        if (!event.getInitiator().getId().equals(userId)) {
+        if (!event.getInitiatorId().equals(userId)) {
             throw new NotFoundException("Event with id " + eventId + " not found for user " + userId);
         }
 
@@ -236,7 +237,7 @@ public class EventServiceImpl implements EventService {
 
         Event event = getEventEntity(eventId);
 
-        if (!event.getInitiator().getId().equals(userId)) {
+        if (!event.getInitiatorId().equals(userId)) {
             throw new NotFoundException("Event with id " + eventId + " not found for user " + userId);
         }
 
@@ -347,6 +348,16 @@ public class EventServiceImpl implements EventService {
     @Override
     public boolean existsByInitiatorId(Long id) {
         return repository.existsByInitiatorId(id);
+    }
+
+    @Override
+    public EventFullDto getEventFullDto(Long eventId) {
+        Event event = getEventEntity(eventId);
+        EventFullDto dto = mapper.toFullDto(event);
+        dto.setInitiator(UserShortDto.builder()
+                .id(event.getInitiatorId())
+                .build());
+        return dto;
     }
 
     @Override

@@ -3,6 +3,7 @@ package ru.yandex.practicum.event.management.controller.event;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.common.dto.EventFullDto;
 import ru.yandex.practicum.common.dto.EventShortDto;
@@ -13,6 +14,7 @@ import ru.yandex.practicum.event.management.events.service.EventService;
 
 import java.util.List;
 
+@Validated
 @Slf4j
 @RestController
 @RequiredArgsConstructor

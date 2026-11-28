@@ -56,9 +56,8 @@ public class Event {
     /**
      * Пользователь-инициатор события. Связь многие-к-одному с таблицей users.
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "initiator_id", nullable = false)
-    private User initiator;
+    @Column(name = "initiator_id", nullable = false)
+    private Long initiatorId;
 
     /**
      * Местоположение события (широта и долгота).

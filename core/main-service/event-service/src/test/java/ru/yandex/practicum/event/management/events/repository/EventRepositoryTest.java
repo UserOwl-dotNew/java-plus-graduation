@@ -65,7 +65,7 @@ public class EventRepositoryTest {
         event1.setDescription("Описание события 1");
         event1.setTitle("Событие 1");
         event1.setCategory(category);
-        event1.setInitiator(initiator);
+        event1.setInitiatorId(initiator.getId());
         event1.setLocation(location);
         event1.setEventDate(now.plusDays(5));
         event1.setCreatedOn(now);
@@ -79,7 +79,7 @@ public class EventRepositoryTest {
         event2.setDescription("Описание события 2");
         event2.setTitle("Событие 2");
         event2.setCategory(category);
-        event2.setInitiator(initiator);
+        event2.setInitiatorId(initiator.getId());
         event2.setLocation(location);
         event2.setEventDate(now.plusDays(10));
         event2.setCreatedOn(now);
@@ -182,8 +182,8 @@ public class EventRepositoryTest {
         Page<Event> result = eventRepository.findByInitiatorId(initiator.getId(), PageRequest.of(0, 10));
 
         assertThat(result.getContent()).hasSize(2);
-        assertThat(result.getContent().getFirst().getInitiator().getId()).isEqualTo(initiator.getId());
-        assertThat(result.getContent().get(1).getInitiator().getId()).isEqualTo(initiator.getId());
+        assertThat(result.getContent().getFirst().getInitiatorId()).isEqualTo(initiator.getId());
+        assertThat(result.getContent().get(1).getInitiatorId()).isEqualTo(initiator.getId());
     }
 
     @Test
@@ -210,7 +210,7 @@ public class EventRepositoryTest {
         event3.setDescription("Описание события 3");
         event3.setTitle("Событие 3");
         event3.setCategory(category);
-        event3.setInitiator(initiator);
+        event3.setInitiatorId(initiator.getId());
         event3.setLocation(location);
         event3.setEventDate(now.plusDays(15));
         event3.setCreatedOn(now);
@@ -294,7 +294,7 @@ public class EventRepositoryTest {
         event3.setDescription("Описание события 3");
         event3.setTitle("Событие 3");
         event3.setCategory(category);
-        event3.setInitiator(initiator);
+        event3.setInitiatorId(initiator.getId());
         event3.setLocation(location);
         event3.setEventDate(now.plusDays(20));
         event3.setCreatedOn(now);
@@ -322,7 +322,7 @@ public class EventRepositoryTest {
         event3.setDescription("Описание события 3");
         event3.setTitle("Событие 3");
         event3.setCategory(category);
-        event3.setInitiator(initiator);
+        event3.setInitiatorId(initiator.getId());
         event3.setLocation(location);
         event3.setEventDate(now.plusDays(15));
         event3.setCreatedOn(now);

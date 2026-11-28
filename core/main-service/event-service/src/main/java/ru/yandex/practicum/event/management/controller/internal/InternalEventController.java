@@ -20,7 +20,7 @@ public class InternalEventController {
 
     @GetMapping("/{id}")
     public EventFullDto getEvent(@PathVariable Long id) {
-        return eventService.getPublicEvent(id);
+        return eventService.getEventFullDto(id);
     }
 
     @GetMapping("/{id}/exists")

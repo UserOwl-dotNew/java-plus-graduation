@@ -82,7 +82,7 @@ class CommentServiceImplTest {
         comment = Comment.builder()
                 .id(COMMENT_ID)
                 .text("Исходный текст")
-                .event(publishedEvent)
+                .eventId(publishedEvent.getId())
                 .authorId(USER_ID)
                 .createdAt(LocalDateTime.now().minusHours(1))
                 .deleted(false)
@@ -113,7 +113,7 @@ class CommentServiceImplTest {
         void createComment_shouldCreateAndReturnComment() {
             Comment newComment = Comment.builder()
                     .text(newCommentDto.getText())
-                    .event(publishedEvent)
+                    .eventId(publishedEvent.getId())
                     .authorId(USER_ID)
                     .deleted(false)
                     .build();
@@ -121,7 +121,7 @@ class CommentServiceImplTest {
             Comment savedComment = Comment.builder()
                     .id(COMMENT_ID)
                     .text(newCommentDto.getText())
-                    .event(publishedEvent)
+                    .eventId(publishedEvent.getId())
                     .authorId(USER_ID)
                     .createdAt(LocalDateTime.now())
                     .deleted(false)
@@ -460,7 +460,7 @@ class CommentServiceImplTest {
 
         @Test
         void getComment_shouldThrowNotFound_whenCommentEventIsNotPublished() {
-            comment.setEvent(pendingEvent);
+            comment.setEventId(pendingEvent.getId());
             when(commentRepository.findByIdAndDeletedFalse(COMMENT_ID))
                     .thenReturn(Optional.of(comment));
 

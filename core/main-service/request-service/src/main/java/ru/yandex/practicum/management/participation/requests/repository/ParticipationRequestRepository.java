@@ -19,7 +19,7 @@ public interface ParticipationRequestRepository extends JpaRepository<Participat
      * @param userId идентификатор пользователя
      * @return список запросов пользователя
      */
-    List<ParticipationRequest> findByRequesterId(Long userId);
+    List<ParticipationRequest> findByRequestId(Long userId);
 
     /**
      * Поиск запроса по идентификатору события и пользователя.
@@ -28,7 +28,7 @@ public interface ParticipationRequestRepository extends JpaRepository<Participat
      * @param userId  идентификатор пользователя
      * @return Optional с запросом, если найден
      */
-    Optional<ParticipationRequest> findByEventIdAndRequesterId(Long eventId, Long userId);
+    Optional<ParticipationRequest> findByEventIdAndRequestId(Long eventId, Long userId);
 
     /**
      * Поиск всех запросов для конкретного события.

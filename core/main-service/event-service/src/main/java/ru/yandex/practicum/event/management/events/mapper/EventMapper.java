@@ -5,7 +5,6 @@ import ru.yandex.practicum.common.dto.EventFullDto;
 import ru.yandex.practicum.common.dto.EventShortDto;
 import ru.yandex.practicum.common.entity.Category;
 import ru.yandex.practicum.common.entity.Event;
-import ru.yandex.practicum.common.entity.User;
 import ru.yandex.practicum.event.management.events.dto.NewEventDto;
 import ru.yandex.practicum.event.management.events.dto.UpdateEventAdminRequest;
 import ru.yandex.practicum.event.management.events.dto.UpdateEventUserRequest;
@@ -44,7 +43,6 @@ public interface EventMapper {
      *
      * @param dto       данные нового события
      * @param category  категория события
-     * @param initiator инициатор события
      * @return сущность события со статусом PENDING и созданная в текущий момент
      */
     @Mapping(target = "id", ignore = true)
@@ -52,8 +50,8 @@ public interface EventMapper {
     @Mapping(target = "createdOn", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "publishedOn", ignore = true)
     @Mapping(target = "category", source = "category")
-    @Mapping(target = "initiator", source = "initiator")
-    Event toEntity(NewEventDto dto, Category category, User initiator);
+    @Mapping(target = "initiatorId", source = "initiatorId")
+    Event toEntity(NewEventDto dto, Category category, Long initiatorId);
 
     /**
      * Обновление события данными от администратора.
@@ -68,7 +66,7 @@ public interface EventMapper {
     @Mapping(target = "state", ignore = true)
     @Mapping(target = "createdOn", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)
-    @Mapping(target = "initiator", ignore = true)
+    @Mapping(target = "initiatorId", ignore = true)
     @Mapping(target = "category", source = "category")
     @Mapping(target = "location", source = "dto.location")
     void updateFromAdmin(UpdateEventAdminRequest dto, Category category, @MappingTarget Event event);
@@ -86,7 +84,7 @@ public interface EventMapper {
     @Mapping(target = "state", ignore = true)
     @Mapping(target = "createdOn", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)
-    @Mapping(target = "initiator", ignore = true)
+    @Mapping(target = "initiatorId", ignore = true)
     @Mapping(target = "category", source = "category")
     @Mapping(target = "location", source = "dto.location")
     void updateFromUser(UpdateEventUserRequest dto, Category category, @MappingTarget Event event);

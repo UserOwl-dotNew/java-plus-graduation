@@ -44,7 +44,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     @Override
     @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getUserRequests(Long userId) {
-        return requestRepository.findByRequesterId(userId)
+        return requestRepository.findByRequestId(userId)
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
@@ -57,10 +57,10 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         if (event.getState() != EventState.PUBLISHED) {
             throw new ConflictException("Нельзя участвовать в неопубликованном событии");
         }
-        if (event.getInitiator().getId().equals(userId)) {
+        if (event.getInitiatorId().equals(userId)) {
             throw new ConflictException("Инициатор события не может подать заявку на участие");
         }
-        if (requestRepository.findByEventIdAndRequesterId(eventId, userId).isPresent()) {
+        if (requestRepository.findByEventIdAndRequestId(eventId, userId).isPresent()) {
             throw new ConflictException("Запрос на участие уже существует");
         }
         long confirmedCount = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
@@ -69,11 +69,11 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         }
 
         ParticipationRequest request = new ParticipationRequest();
-        request.setEvent(event);
+        request.setEventId(event.getId());
 
         User requester = new User();
         requester.setId(userId);
-        request.setRequester(requester);
+        request.setRequestId(requester.getId());
 
         if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
             request.setStatus(RequestStatus.CONFIRMED);
@@ -91,7 +91,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     public ParticipationRequestDto cancelRequest(Long userId, Long requestId) {
         ParticipationRequest request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Запрос не найден"));
-        if (!request.getRequester().getId().equals(userId)) {
+        if (!request.getRequestId().equals(userId)) {
             throw new ConflictException("Нельзя отменить чужой запрос");
         }
         request.setStatus(RequestStatus.CANCELED);
@@ -104,7 +104,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getEventRequests(Long userId, Long eventId) {
         Event event = toEventEntity(eventClient.getEvent(eventId));
-        if (!event.getInitiator().getId().equals(userId)) {
+        if (!event.getInitiatorId().equals(userId)) {
             throw new ConflictException("Только инициатор события может видеть заявки");
         }
         return requestRepository.findByEventId(eventId)
@@ -117,7 +117,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     public EventRequestStatusUpdateResult updateRequestStatus(Long userId, Long eventId,
                                                               EventRequestStatusUpdateRequest updateRequest) {
         Event event = toEventEntity(eventClient.getEvent(eventId));
-        if (!event.getInitiator().getId().equals(userId)) {
+        if (!event.getInitiatorId().equals(userId)) {
             throw new ConflictException("Только инициатор может менять статус заявок");
         }
 
@@ -170,8 +170,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     private ParticipationRequestDto toDto(ParticipationRequest request) {
         return new ParticipationRequestDto(
                 request.getId(),
-                request.getEvent().getId(),
-                request.getRequester().getId(),
+                request.getEventId(),
+                request.getRequestId(),
                 request.getStatus(),
                 request.getCreated()
         );
@@ -187,11 +187,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                         dto.getCategory().getId(),
                         dto.getCategory().getName()
                 ))
-                .initiator(User.builder()
-                        .id(dto.getInitiator().getId())
-                        .name(dto.getInitiator().getName())
-                        .build()
-                )
+                .initiatorId(dto.getInitiator().getId())
                 .location(new Location (
                         dto.getLocation().getLat(),
                         dto.getLocation().getLon()

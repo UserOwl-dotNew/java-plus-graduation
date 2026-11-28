@@ -67,9 +67,8 @@ public class Comment {
      * Связь ManyToOne с сущностью Event.
      * При удалении события все его комментарии каскадно удаляются.
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id", nullable = false)
-    private Event event;
+    @Column(name = "event_id", nullable = false)
+    private Long eventId;
 
     /**
      * Ссылка на автора комментария.

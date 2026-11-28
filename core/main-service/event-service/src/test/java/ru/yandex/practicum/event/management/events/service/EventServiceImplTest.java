@@ -114,7 +114,7 @@ public class EventServiceImplTest {
         event.setDescription("Новое описание для проверки работы метода");
         event.setTitle("Тестовое событие");
         event.setCategory(category);
-        event.setInitiator(initiator);
+        event.setInitiatorId(initiator.getId());
         event.setLocation(location);
         event.setEventDate(now.plusDays(5));
         event.setCreatedOn(now);
@@ -361,7 +361,7 @@ public class EventServiceImplTest {
 
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
         when(userClient.getEntity(userId)).thenReturn(new UserDto(initiator.getId(), initiator.getEmail(), initiator.getName()));
-        when(eventMapper.toEntity(any(NewEventDto.class), any(Category.class), any(User.class)))
+        when(eventMapper.toEntity(any(NewEventDto.class), any(Category.class), anyLong()))
                 .thenReturn(newEvent);
         when(eventRepository.save(any(Event.class))).thenReturn(event);
         when(eventMapper.toFullDto(any(Event.class))).thenReturn(eventFullDto);
@@ -736,7 +736,7 @@ public class EventServiceImplTest {
         newEvent.setDescription("Описание нового события");
         newEvent.setTitle("Новое событие");
         newEvent.setCategory(category);
-        newEvent.setInitiator(initiator);
+        newEvent.setInitiatorId(initiator.getId());
         newEvent.setLocation(new Location(55.754167f, 37.62f));
         newEvent.setEventDate(LocalDateTime.now().plusDays(3));
         newEvent.setCreatedOn(LocalDateTime.now());
