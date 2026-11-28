@@ -12,9 +12,6 @@ import ru.yandex.practicum.comments.entity.Comment;
 import ru.yandex.practicum.comments.mapper.CommentMapper;
 import ru.yandex.practicum.comments.repository.CommentRepository;
 import ru.yandex.practicum.common.dto.*;
-import ru.yandex.practicum.common.entity.Category;
-import ru.yandex.practicum.common.entity.Event;
-import ru.yandex.practicum.common.entity.Location;
 import ru.yandex.practicum.common.enums.EventState;
 import ru.yandex.practicum.common.enums.SortType;
 import ru.yandex.practicum.common.exception.ConflictException;
@@ -46,18 +43,13 @@ public class CommentServiceImpl implements CommentService {
             throw new NotFoundException("Пользователь с id= " + userId + " не найден");
         }
 
-        Event event = getEventOrThrow(eventId);
-        if (event == null) {
-            throw new NotFoundException(
-                    "Событие с id=" + eventId + " не найдено"
-            );
-        }
+        EventFullDto event = getEventOrThrow(eventId);
 
         if (event.getState() != EventState.PUBLISHED) {
             throw new ConflictException("Добавлять комментарии можно только к опубликованным событиям");
         }
 
-        Comment comment = commentMapper.toEntity(dto, event, userId);
+        Comment comment = commentMapper.toEntity(dto, eventId, userId);
 
         Comment savedComment = commentRepository.save(comment);
 
@@ -130,12 +122,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentDto> getEventComments(Long eventId, int from, int size, String sort) {
-        Event event = getEventOrThrow(eventId);
-        if (event == null) {
-            throw new NotFoundException(
-                    "Событие с id=" + eventId + " не найдено"
-            );
-        }
+        EventFullDto event = getEventOrThrow(eventId);
 
         if (event.getState() != EventState.PUBLISHED) {
             throw new NotFoundException(
@@ -167,7 +154,8 @@ public class CommentServiceImpl implements CommentService {
                         "Комментарий с id=" + commentId + " не найден"
                 ));
 
-        if (eventClient.getEvent(comment.getEventId()).getState() != EventState.PUBLISHED) {
+        EventFullDto event = getEventOrThrow(comment.getEventId());
+        if (event.getState() != EventState.PUBLISHED) {
             throw new NotFoundException(
                     "Опубликованное событие с id="
                             + comment.getEventId()
@@ -231,37 +219,17 @@ public class CommentServiceImpl implements CommentService {
                 .getContent();
     }
 
-    private Event toEventEntity(EventFullDto dto) {
-        return Event.builder()
-                .id(dto.getId())
-                .annotation(dto.getAnnotation())
-                .description(dto.getDescription())
-                .title(dto.getTitle())
-                .category(new Category(
-                        dto.getCategory().getId(),
-                        dto.getCategory().getName()
-                ))
-                .initiatorId(dto.getInitiator().getId())
-                .location(new Location(
-                        dto.getLocation().getLat(),
-                        dto.getLocation().getLon()
-                ))
-                .eventDate(dto.getEventDate())
-                .createdOn(dto.getCreatedOn())
-                .publishedOn(dto.getPublishedOn())
-                .paid(dto.getPaid())
-                .participantLimit(dto.getParticipantLimit())
-                .requestModeration(dto.getRequestModeration())
-                .state(dto.getState())
-                .build();
-    }
-
-    private Event getEventOrThrow(Long eventId) {
+    private EventFullDto getEventOrThrow(Long eventId) {
+        EventFullDto event;
         try {
-            return toEventEntity(eventClient.getEvent(eventId));
+            event = eventClient.getEvent(eventId);
         } catch (FeignException.NotFound e) {
             throw new NotFoundException("Событие с id=" + eventId + " не найдено");
         }
+        if (event == null) {
+            throw new NotFoundException("Событие с id=" + eventId + " не найдено");
+        }
+        return event;
     }
 
     private UserDto getUserDtoOrThrow(Long userId) {

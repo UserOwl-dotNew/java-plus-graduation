@@ -163,6 +163,7 @@ public class EventServiceImplTest {
 
         when(eventMapper.toFullDto(event))
                 .thenReturn(eventFullDto);
+        when(userClient.getEntity(anyLong())).thenReturn(UserDto.builder().id(1L).build());
 
         List<EventFullDto> result = eventService.getAdminEvents(
                 null, null, null, null,
@@ -186,6 +187,7 @@ public class EventServiceImplTest {
 
         when(eventMapper.toFullDto(event))
                 .thenReturn(eventFullDto);
+        when(userClient.getEntity(anyLong())).thenReturn(UserDto.builder().id(1L).build());
 
         List<EventFullDto> result = eventService.getAdminEvents(
                 List.of(1L, 2L),
@@ -272,6 +274,7 @@ public class EventServiceImplTest {
         when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
         when(eventRepository.save(event)).thenReturn(event);
         when(eventMapper.toFullDto(event)).thenReturn(eventFullDto);
+        when(userClient.getEntity(anyLong())).thenReturn(UserDto.builder().id(1L).build());
 
         lenient().doAnswer(invocation -> {
             UpdateEventAdminRequest req = invocation.getArgument(0);
@@ -672,6 +675,7 @@ public class EventServiceImplTest {
         when(eventMapper.toFullDto(event)).thenReturn(eventFullDto);
         when(statsClient.getStats(anyString(), anyString(), anyString(), eq(true)))
                 .thenReturn(List.of());
+        when(userClient.getEntity(anyLong())).thenReturn(UserDto.builder().id(1L).build());
 
         EventFullDto result = eventService.getPublicEvent(eventId);
 

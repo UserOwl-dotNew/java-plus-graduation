@@ -1,5 +1,6 @@
 package ru.yandex.practicum.comments.service;
 
+import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,6 @@ import ru.yandex.practicum.comments.entity.Comment;
 import ru.yandex.practicum.comments.mapper.CommentMapper;
 import ru.yandex.practicum.comments.repository.CommentRepository;
 import ru.yandex.practicum.common.dto.*;
-import ru.yandex.practicum.common.entity.Event;
 import ru.yandex.practicum.common.entity.User;
 import ru.yandex.practicum.common.enums.EventState;
 import ru.yandex.practicum.common.enums.SortType;
@@ -59,8 +59,8 @@ class CommentServiceImplTest {
 
     private User author;
     private User anotherUser;
-    private Event publishedEvent;
-    private Event pendingEvent;
+    private EventFullDto eventFullDtoPublished;
+    private EventFullDto eventFullDtoPending;
     private Comment comment;
     private CommentDto commentDto;
     private NewCommentDto newCommentDto;
@@ -71,18 +71,18 @@ class CommentServiceImplTest {
         author = new User(USER_ID, "author@example.com", "Автор");
         anotherUser = new User(ANOTHER_USER_ID, "another@example.com", "Другой пользователь");
 
-        publishedEvent = new Event();
-        publishedEvent.setId(EVENT_ID);
-        publishedEvent.setState(EventState.PUBLISHED);
+        eventFullDtoPublished = new EventFullDto();
+        eventFullDtoPublished.setId(EVENT_ID);
+        eventFullDtoPublished.setState(EventState.PUBLISHED);
 
-        pendingEvent = new Event();
-        pendingEvent.setId(EVENT_ID);
-        pendingEvent.setState(EventState.PENDING);
+        eventFullDtoPending = new EventFullDto();
+        eventFullDtoPending.setId(EVENT_ID);
+        eventFullDtoPending.setState(EventState.PENDING);
 
         comment = Comment.builder()
                 .id(COMMENT_ID)
                 .text("Исходный текст")
-                .eventId(publishedEvent.getId())
+                .eventId(EVENT_ID)
                 .authorId(USER_ID)
                 .createdAt(LocalDateTime.now().minusHours(1))
                 .deleted(false)
@@ -113,7 +113,7 @@ class CommentServiceImplTest {
         void createComment_shouldCreateAndReturnComment() {
             Comment newComment = Comment.builder()
                     .text(newCommentDto.getText())
-                    .eventId(publishedEvent.getId())
+                    .eventId(EVENT_ID)
                     .authorId(USER_ID)
                     .deleted(false)
                     .build();
@@ -121,7 +121,7 @@ class CommentServiceImplTest {
             Comment savedComment = Comment.builder()
                     .id(COMMENT_ID)
                     .text(newCommentDto.getText())
-                    .eventId(publishedEvent.getId())
+                    .eventId(EVENT_ID)
                     .authorId(USER_ID)
                     .createdAt(LocalDateTime.now())
                     .deleted(false)
@@ -137,8 +137,8 @@ class CommentServiceImplTest {
                     .build();
 
             when(userClient.getEntity(USER_ID)).thenReturn(new UserDto(USER_ID, "author@example.com", "Автор"));
-            when(eventFeignClient.findById(EVENT_ID)).thenReturn(publishedEvent);
-            when(commentMapper.toEntity(newCommentDto, publishedEvent, USER_ID)).thenReturn(newComment);
+            when(eventFeignClient.getEvent(EVENT_ID)).thenReturn(eventFullDtoPublished);
+            when(commentMapper.toEntity(newCommentDto, EVENT_ID, USER_ID)).thenReturn(newComment);
             when(commentRepository.save(newComment)).thenReturn(savedComment);
             when(commentMapper.toDto(savedComment)).thenReturn(savedDto);
 
@@ -148,7 +148,7 @@ class CommentServiceImplTest {
             assertThat(result.getId()).isEqualTo(COMMENT_ID);
             assertThat(result.getText()).isEqualTo(newCommentDto.getText());
 
-            verify(commentMapper).toEntity(newCommentDto, publishedEvent, USER_ID);
+            verify(commentMapper).toEntity(newCommentDto, EVENT_ID, USER_ID);
             verify(commentRepository).save(newComment);
             verify(commentMapper).toDto(savedComment);
         }
@@ -168,7 +168,7 @@ class CommentServiceImplTest {
         @Test
         void createComment_shouldThrowNotFound_whenEventDoesNotExist() {
             when(userClient.getEntity(USER_ID)).thenReturn(new UserDto(USER_ID, "author@example.com", "Автор"));
-            when(eventFeignClient.findById(EVENT_ID)).thenReturn(null);
+            when(eventFeignClient.getEvent(EVENT_ID)).thenThrow(mock(FeignException.NotFound.class));
 
             assertThatThrownBy(() -> commentService.createComment(USER_ID, EVENT_ID, newCommentDto))
                     .isInstanceOf(NotFoundException.class)
@@ -181,7 +181,7 @@ class CommentServiceImplTest {
         @Test
         void createComment_shouldThrowConflict_whenEventIsNotPublished() {
             when(userClient.getEntity(USER_ID)).thenReturn(new UserDto(USER_ID, "author@example.com", "Автор"));
-            when(eventFeignClient.findById(EVENT_ID)).thenReturn(pendingEvent);
+            when(eventFeignClient.getEvent(EVENT_ID)).thenReturn(eventFullDtoPending);
 
             assertThatThrownBy(() -> commentService.createComment(USER_ID, EVENT_ID, newCommentDto))
                     .isInstanceOf(ConflictException.class)
@@ -372,7 +372,7 @@ class CommentServiceImplTest {
             List<Comment> comments = List.of(comment);
             List<CommentDto> expected = List.of(commentDto);
 
-            when(eventFeignClient.findById(EVENT_ID)).thenReturn(publishedEvent);
+            when(eventFeignClient.getEvent(EVENT_ID)).thenReturn(eventFullDtoPublished);
             when(commentRepository.findByEventIdAndDeletedFalse(EVENT_ID, pageable))
                     .thenReturn(new PageImpl<>(comments, pageable, comments.size()));
             when(commentMapper.toDtoList(comments)).thenReturn(expected);
@@ -391,7 +391,7 @@ class CommentServiceImplTest {
             Pageable pageable = PageRequest.of(2, size);
             List<Comment> comments = List.of(comment);
 
-            when(eventFeignClient.findById(EVENT_ID)).thenReturn(publishedEvent);
+            when(eventFeignClient.getEvent(EVENT_ID)).thenReturn(eventFullDtoPublished);
             when(commentRepository.findByEventIdAndDeletedFalse(EVENT_ID, pageable))
                     .thenReturn(new PageImpl<>(comments, pageable, comments.size()));
             when(commentMapper.toDtoList(comments)).thenReturn(List.of(commentDto));
@@ -410,7 +410,7 @@ class CommentServiceImplTest {
 
         @Test
         void getEventComments_shouldThrowNotFound_whenEventDoesNotExist() {
-            when(eventFeignClient.findById(EVENT_ID)).thenReturn(null);
+            when(eventFeignClient.getEvent(EVENT_ID)).thenReturn(null);
 
             assertThatThrownBy(() -> commentService.getEventComments(EVENT_ID, 0, 10, null))
                     .isInstanceOf(NotFoundException.class)
@@ -421,7 +421,7 @@ class CommentServiceImplTest {
 
         @Test
         void getEventComments_shouldThrowNotFound_whenEventIsNotPublished() {
-            when(eventFeignClient.findById(EVENT_ID)).thenReturn(pendingEvent);
+            when(eventFeignClient.getEvent(EVENT_ID)).thenReturn(eventFullDtoPending);
 
             assertThatThrownBy(() -> commentService.getEventComments(EVENT_ID, 0, 10, null))
                     .isInstanceOf(NotFoundException.class)
@@ -438,6 +438,7 @@ class CommentServiceImplTest {
         void getComment_shouldReturnActiveCommentOfPublishedEvent() {
             when(commentRepository.findByIdAndDeletedFalse(COMMENT_ID))
                     .thenReturn(Optional.of(comment));
+            when(eventFeignClient.getEvent(EVENT_ID)).thenReturn(eventFullDtoPublished);
             when(commentMapper.toDto(comment)).thenReturn(commentDto);
 
             CommentDto result = commentService.getComment(EVENT_ID, COMMENT_ID);
@@ -460,9 +461,10 @@ class CommentServiceImplTest {
 
         @Test
         void getComment_shouldThrowNotFound_whenCommentEventIsNotPublished() {
-            comment.setEventId(pendingEvent.getId());
             when(commentRepository.findByIdAndDeletedFalse(COMMENT_ID))
                     .thenReturn(Optional.of(comment));
+
+            when(eventFeignClient.getEvent(EVENT_ID)).thenReturn(eventFullDtoPending);
 
             assertThatThrownBy(() -> commentService.getComment(EVENT_ID, COMMENT_ID))
                     .isInstanceOf(NotFoundException.class)

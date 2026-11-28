@@ -5,7 +5,6 @@ import ru.yandex.practicum.comments.entity.Comment;
 import ru.yandex.practicum.common.dto.CommentDto;
 import ru.yandex.practicum.common.dto.NewCommentDto;
 import ru.yandex.practicum.common.dto.UpdateCommentDto;
-import ru.yandex.practicum.common.entity.Event;
 
 import java.util.List;
 
@@ -45,8 +44,8 @@ public interface CommentMapper {
      * Преобразование NewCommentDto в сущность Comment.
      *
      * @param dto    данные нового комментария
-     * @param event  событие, к которому относится комментарий
-     * @param author автор комментария
+     * @param eventId идентификатор события
+     * @param userId  идентификатор автора комментария
      * @return сущность комментария с текущей датой создания
      */
     @Mapping(target = "id", ignore = true)
@@ -56,9 +55,11 @@ public interface CommentMapper {
     )
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deleted", constant = "false")
+    @Mapping(target = "eventId", source = "eventId")
+    @Mapping(target = "authorId", source = "userId")
     Comment toEntity(
             NewCommentDto dto,
-            Event event,
+            Long eventId,
             Long userId
     );
 
