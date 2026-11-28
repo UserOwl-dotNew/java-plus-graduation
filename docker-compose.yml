@@ -23,8 +23,8 @@ services:
       - ./infra/config-repo:/app/config-repo
     environment:
       eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
-      SPRING_APPLICATION_NAME: "config-server"
       eureka.instance.prefer-ip-address: "true"
+      SPRING_APPLICATION_NAME: "config-server"
       SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS: "file:/app/config-repo,file:/app/config-repo/core,file:/app/config-repo/statistics-service,file:/app/config-repo/infra"
     healthcheck:
       test: [ "CMD", "wget", "-qO-", "http://eureka-server:8761/eureka/apps/CONFIG-SERVER" ]
@@ -83,9 +83,11 @@ services:
       SPRING_DATASOURCE_URL: "jdbc:postgresql://stats-db:5432/ewm-stats"
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_APPLICATION_NAME: "stats-service"
+      SPRING_APPLICATION_NAME: "stats-server"
+      SPRING_CLOUD_CONFIG_NAME: "stats-server"
       eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
       eureka.instance.prefer-ip-address: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
 
   ewm-db:
     image: postgres:16.1
@@ -103,11 +105,27 @@ services:
       timeout: 5s
       retries: 5
 
-  ewm-service:
-    build: ./core/main-service
-    container_name: ewm-service
+  ewm-event:
+    image: postgres:16.1
+    environment:
+      POSTGRES_DB: ewm-event
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - ewm-event-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  event-service:
+    build: ./core/main-service/event-service
+    container_name: event-service
     depends_on:
-      ewm-db:
+      ewm-event:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
@@ -115,22 +133,142 @@ services:
         condition: service_healthy
     restart: on-failure
     environment:
+      SPRING_CONFIG_IMPORT: "configserver:"
       SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "true"
       SPRING_CLOUD_CONFIG_DISCOVERY_SERVICE_ID: "config-server"
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://ewm-db:5432/ewm"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://ewm-event:5432/ewm-event"
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_APPLICATION_NAME: "main-service"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_APPLICATION_NAME: "event-service"
       eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
       eureka.instance.prefer-ip-address: "true"
+
+  ewm-request:
+    image: postgres:16.1
+    environment:
+      POSTGRES_DB: ewm-request
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - ewm-request-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
-      interval: 5s
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
       timeout: 5s
-      retries: 20
-      start_period: 60s
+      retries: 5
+
+  request-service:
+    build: ./core/main-service/request-service
+    container_name: request-service
+    depends_on:
+      ewm-request:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    restart: on-failure
+    environment:
+      SPRING_CONFIG_IMPORT: "configserver:"
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "true"
+      SPRING_CLOUD_CONFIG_DISCOVERY_SERVICE_ID: "config-server"
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://ewm-request:5432/ewm-request"
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_APPLICATION_NAME: "request-service"
+      eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
+      eureka.instance.prefer-ip-address: "true"
+
+  ewm-user:
+    image: postgres:16.1
+    environment:
+      POSTGRES_DB: ewm-user
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - ewm-user-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build: ./core/main-service/user-service
+    container_name: user-service
+    depends_on:
+      ewm-user:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    restart: on-failure
+    environment:
+      SPRING_CONFIG_IMPORT: "configserver:"
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "true"
+      SPRING_CLOUD_CONFIG_DISCOVERY_SERVICE_ID: "config-server"
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://ewm-user:5432/ewm-user"
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_APPLICATION_NAME: "user-service"
+      eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
+      eureka.instance.prefer-ip-address: "true"
+
+  ewm-comment:
+    image: postgres:16.1
+    environment:
+      POSTGRES_DB: ewm-comment
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5437:5432"
+    volumes:
+      - ewm-comment-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  comment-service:
+    build: ./core/main-service/comment-service
+    container_name: comment-service
+    depends_on:
+      ewm-comment:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    restart: on-failure
+    environment:
+      SPRING_CONFIG_IMPORT: "configserver:"
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "true"
+      SPRING_CLOUD_CONFIG_DISCOVERY_SERVICE_ID: "config-server"
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://ewm-comment:5432/ewm-comment"
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_APPLICATION_NAME: "comment-service"
+      eureka.client.serviceUrl.defaultZone: "http://eureka-server:8761/eureka/"
+      eureka.instance.prefer-ip-address: "true"
 
 volumes:
   stats-db-data:
   ewm-db-data:
+  ewm-user-data:
+  ewm-comment-data:
+  ewm-event-data:
+  ewm-request-data:
